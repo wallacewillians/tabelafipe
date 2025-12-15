@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Consulte a Tabela FIPE de forma rápida e fácil. Preços atualizados de carros, motos e caminhões.">
+    <title>Consulta Tabela FIPE | Rápido e Fácil</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Tabela FIPE</h1>
+            <p>Consulte o preço médio de veículos no Brasil</p>
+        </header>
+
+        <main>
+            <div class="vehicle-type-selector">
+                <button class="type-btn active" data-type="cars">
+                    <span class="icon">🚗</span> Carros
+                </button>
+                <button class="type-btn" data-type="motorcycles">
+                    <span class="icon">🏍️</span> Motos
+                </button>
+                <button class="type-btn" data-type="trucks">
+                    <span class="icon">🚚</span> Caminhões
+                </button>
+            </div>
+
+            <form id="fipe-form" class="fipe-form">
+                <div class="form-group">
+                    <label for="brand-select">Marca</label>
+                    <select id="brand-select" disabled>
+                        <option value="" selected disabled>Selecione a marca</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="model-select">Modelo</label>
+                    <select id="model-select" disabled>
+                        <option value="" selected disabled>Selecione o modelo</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="year-select">Ano</label>
+                    <select id="year-select" disabled>
+                        <option value="" selected disabled>Selecione o ano</option>
+                    </select>
+                </div>
+            </form>
+
+            <div id="result-container" class="result-container hidden">
+                <div class="result-card">
+                    <h2 id="result-model">Modelo do Veículo</h2>
+                    <div class="price-highlight">
+                        <span class="currency">R$</span>
+                        <span id="result-price" class="value">0,00</span>
+                    </div>
+                    
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="label">Marca</span>
+                            <span id="result-brand" class="info">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Ano Modelo</span>
+                            <span id="result-year" class="info">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Combustível</span>
+                            <span id="result-fuel" class="info">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Código FIPE</span>
+                            <span id="result-code" class="info">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Mês de Referência</span>
+                            <span id="result-ref" class="info">-</span>
+                        </div>
+                    </div>
+                    
+                    <button id="btn-new-search" class="btn-secondary">Nova Consulta</button>
+                </div>
+            </div>
+            
+            <div id="loading" class="loading-overlay hidden">
+                <div class="spinner"></div>
+                <p>Carregando informações...</p>
+            </div>
+        </main>
+
+        <footer>
+            <p>Dados fornecidos pela Tabela FIPE. API por <a href="https://deividfortuna.github.io/fipe/" target="_blank" rel="noopener noreferrer">Parallelum</a>.</p>
+            <p>&copy; 2025 nfsolarpe.com.br</p>
+        </footer>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
