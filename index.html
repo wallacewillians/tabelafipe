@@ -19,16 +19,18 @@
 
         <main>
             <div class="vehicle-type-selector">
-                <button class="type-btn active" data-type="cars">
-                    <span class="icon">🚗</span> Carros
+                <button class="type-btn active" data-type="cars" aria-label="Consultar Carros">
+                    <span class="icon" aria-hidden="true">🚗</span> Carros
                 </button>
-                <button class="type-btn" data-type="motorcycles">
-                    <span class="icon">🏍️</span> Motos
+                <button class="type-btn" data-type="motorcycles" aria-label="Consultar Motos">
+                    <span class="icon" aria-hidden="true">🏍️</span> Motos
                 </button>
-                <button class="type-btn" data-type="trucks">
-                    <span class="icon">🚚</span> Caminhões
+                <button class="type-btn" data-type="trucks" aria-label="Consultar Caminhões">
+                    <span class="icon" aria-hidden="true">🚚</span> Caminhões
                 </button>
             </div>
+
+            <div id="message-container" class="message-container" aria-live="polite"></div>
 
             <form id="fipe-form" class="fipe-form">
                 <div class="form-group">

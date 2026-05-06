@@ -16,6 +16,7 @@ const resultContainer = document.getElementById('result-container');
 const formElement = document.getElementById('fipe-form');
 const loadingOverlay = document.getElementById('loading');
 const btnNewSearch = document.getElementById('btn-new-search');
+const messageContainer = document.getElementById('message-container');
 
 // Result Elements
 const resultModel = document.getElementById('result-model');
@@ -25,6 +26,137 @@ const resultYear = document.getElementById('result-year');
 const resultFuel = document.getElementById('result-fuel');
 const resultCode = document.getElementById('result-code');
 const resultRef = document.getElementById('result-ref');
+
+// Helper Functions
+function showLoading(show) {
+    loadingOverlay.style.display = show ? 'flex' : 'none';
+}
+
+function showMessage(text, type = 'error') {
+    if (!text) {
+        messageContainer.style.display = 'none';
+        return;
+    }
+    messageContainer.textContent = text;
+    messageContainer.className = `message-container message-${type}`;
+    messageContainer.style.display = 'block';
+
+    if (type === 'error') {
+        setTimeout(() => showMessage(null), 5000);
+    }
+}
+
+async function fetchAPI(endpoint) {
+    try {
+        const response = await fetch(`${BASE_URL}${endpoint}`);
+        if (!response.ok) {
+            throw new Error(`Erro na API: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('API Fetch Error:', error);
+        throw error;
+    }
+}
+
+function resetSelect(select, defaultText) {
+    select.innerHTML = `<option value="" selected disabled>${defaultText}</option>`;
+}
+
+function populateSelect(select, data, defaultText) {
+    resetSelect(select, defaultText);
+    data.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.code;
+        option.textContent = item.name;
+        select.appendChild(option);
+    });
+}
+
+// API Calls
+async function loadBrands() {
+    showLoading(true);
+    showMessage(null);
+    try {
+        const brands = await fetchAPI(`/${state.vehicleType}/brands`);
+        populateSelect(brandSelect, brands, 'Selecione a marca');
+        brandSelect.disabled = false;
+    } catch (error) {
+        showMessage('Não foi possível carregar as marcas. Tente novamente mais tarde.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function loadModels(brandId) {
+    showLoading(true);
+    try {
+        const models = await fetchAPI(`/${state.vehicleType}/brands/${brandId}/models`);
+        populateSelect(modelSelect, models, 'Selecione o modelo');
+    } catch (error) {
+        showMessage('Erro ao carregar modelos.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function loadYears(brandId, modelId) {
+    showLoading(true);
+    try {
+        const years = await fetchAPI(`/${state.vehicleType}/brands/${brandId}/models/${modelId}/years`);
+        populateSelect(yearSelect, years, 'Selecione o ano');
+    } catch (error) {
+        showMessage('Erro ao carregar anos.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function loadPrice(brandId, modelId, yearId) {
+    showLoading(true);
+    try {
+        const data = await fetchAPI(`/${state.vehicleType}/brands/${brandId}/models/${modelId}/years/${yearId}`);
+        displayResult(data);
+    } catch (error) {
+        showMessage('Erro ao obter preço do veículo.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function displayResult(data) {
+    resultModel.textContent = data.model;
+    resultPrice.textContent = data.price;
+    resultBrand.textContent = data.brand;
+    resultYear.textContent = `${data.modelYear} ${data.fuel}`;
+    resultFuel.textContent = data.fuel;
+    resultCode.textContent = data.codeFipe;
+    resultRef.textContent = data.referenceMonth;
+
+    formElement.style.display = 'none';
+    resultContainer.style.display = 'block';
+}
+
+function updateVehicleType(type) {
+    state.vehicleType = type;
+    state.brandId = null;
+    state.modelId = null;
+    state.yearId = null;
+
+    typeButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.type === type);
+    });
+
+    brandSelect.disabled = true;
+    modelSelect.disabled = true;
+    yearSelect.disabled = true;
+
+    resetSelect(brandSelect, 'Carregando marcas...');
+    resetSelect(modelSelect, 'Selecione o modelo');
+    resetSelect(yearSelect, 'Selecione o ano');
+
+    loadBrands();
+}
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
@@ -62,156 +194,7 @@ yearSelect.addEventListener('change', (e) => {
 });
 
 btnNewSearch.addEventListener('click', () => {
-    resultContainer.classList.add('hidden');
-    formElement.classList.remove('hidden');
-    // Reset selections but keep the current vehicle type
-    resetSelect(brandSelect, 'Selecione a marca');
-    resetSelect(modelSelect, 'Selecione o modelo');
-    resetSelect(yearSelect, 'Selecione o ano');
-    brandSelect.disabled = false;
-    modelSelect.disabled = true;
-    yearSelect.disabled = true;
-    loadBrands();
+    resultContainer.style.display = 'none';
+    formElement.style.display = 'block';
+    updateVehicleType(state.vehicleType);
 });
-
-// Logic Functions
-
-function updateVehicleType(type) {
-    state.vehicleType = type;
-    
-    // Update UI
-    typeButtons.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.type === type);
-    });
-
-    // Reset Form
-    state.brandId = null;
-    state.modelId = null;
-    state.yearId = null;
-    
-    resetSelect(brandSelect, 'Selecione a marca');
-    resetSelect(modelSelect, 'Selecione o modelo');
-    resetSelect(yearSelect, 'Selecione o ano');
-    
-    modelSelect.disabled = true;
-    yearSelect.disabled = true;
-
-    loadBrands();
-}
-
-async function loadBrands() {
-    showLoading(true);
-    try {
-        const response = await fetch(`${BASE_URL}/${state.vehicleType}/brands`);
-        const brands = await response.json();
-        
-        populateSelect(brandSelect, brands);
-        brandSelect.disabled = false;
-    } catch (error) {
-        console.error('Erro ao carregar marcas:', error);
-        alert('Erro ao carregar marcas. Tente novamente.');
-    } finally {
-        showLoading(false);
-    }
-}
-
-async function loadModels(brandId) {
-    showLoading(true);
-    try {
-        const response = await fetch(`${BASE_URL}/${state.vehicleType}/brands/${brandId}/models`);
-        const models = await response.json();
-        
-        populateSelect(modelSelect, models);
-        modelSelect.disabled = false;
-    } catch (error) {
-        console.error('Erro ao carregar modelos:', error);
-        alert('Erro ao carregar modelos. Tente novamente.');
-    } finally {
-        showLoading(false);
-    }
-}
-
-async function loadYears(brandId, modelId) {
-    showLoading(true);
-    try {
-        const response = await fetch(`${BASE_URL}/${state.vehicleType}/brands/${brandId}/models/${modelId}/years`);
-        const years = await response.json();
-        
-        populateSelect(yearSelect, years);
-        yearSelect.disabled = false;
-    } catch (error) {
-        console.error('Erro ao carregar anos:', error);
-        alert('Erro ao carregar anos. Tente novamente.');
-    } finally {
-        showLoading(false);
-    }
-}
-
-async function loadPrice(brandId, modelId, yearId) {
-    showLoading(true);
-    try {
-        const response = await fetch(`${BASE_URL}/${state.vehicleType}/brands/${brandId}/models/${modelId}/years/${yearId}`);
-        const data = await response.json();
-        
-        displayResult(data);
-    } catch (error) {
-        console.error('Erro ao consultar preço:', error);
-        alert('Erro ao consultar preço. Tente novamente.');
-    } finally {
-        showLoading(false);
-    }
-}
-
-// Helper Functions
-
-function populateSelect(selectElement, items) {
-    selectElement.innerHTML = '<option value="" selected disabled>Selecione</option>';
-    
-    // sorting items by name if they have name property
-    items.sort((a, b) => a.name.localeCompare(b.name));
-
-    items.forEach(item => {
-        const option = document.createElement('option');
-        option.value = item.code || item.id; // API uses 'code' for some, 'id' for others usually? Wait, checking API.
-        // Parallelum API usually uses 'code' as the identifier in the list
-        // Let's check the objects. Usually { name: "Acura", code: "1" }
-        // Models: { name: "Integra GS 1.8", code: "1" }
-        // Years: { name: "1992 Gasolina", code: "1992-1" }
-        option.value = item.code;
-        option.textContent = item.name;
-        selectElement.appendChild(option);
-    });
-    
-    // Restore default option text based on select ID
-    const defaultText = selectElement.id === 'brand-select' ? 'Selecione a marca' :
-                       selectElement.id === 'model-select' ? 'Selecione o modelo' : 'Selecione o ano';
-    selectElement.querySelector('option').textContent = defaultText;
-}
-
-function resetSelect(selectElement, defaultText) {
-    selectElement.innerHTML = `<option value="" selected disabled>${defaultText}</option>`;
-    selectElement.disabled = true;
-}
-
-function displayResult(data) {
-    // Hide form, show result
-    formElement.classList.add('hidden');
-    resultContainer.classList.remove('hidden');
-
-    // Populate data
-    resultModel.textContent = data.model;
-    resultBrand.textContent = data.brand;
-    resultPrice.textContent = data.price.replace('R$ ', '');
-    resultYear.textContent = data.modelYear;
-    resultFuel.textContent = data.fuel;
-    resultCode.textContent = data.codeFipe;
-    resultRef.textContent = data.referenceMonth;
-}
-
-function showLoading(isLoading) {
-    if (isLoading) {
-        loadingOverlay.classList.remove('hidden');
-    } else {
-        loadingOverlay.classList.add('hidden');
-    }
-}
